@@ -22,6 +22,13 @@ class Draft4TestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        # Declared as unsupported by fastjsonschema
+        cls.blacklist = [
+            "additionalProperties",
+            "definitions",
+            "dependencies",
+            "patternProperties",
+        ]
         cls.tests_dir_path = Path().resolve() / "JSON-Schema-Test-Suite/tests/draft4"
         cls.tests = {
             "files": 0,
@@ -32,6 +39,9 @@ class Draft4TestCase(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        print("\nSkipped:\n")
+        for i, name in enumerate(cls.blacklist, 1):
+            print("{}. {}.json".format(i, name))
         if cls.exceptions:
             print("\nFailure summary:")
             file_exceptions = test_case_exceptions = total_exceptions = 0
@@ -60,33 +70,34 @@ class Draft4TestCase(unittest.TestCase):
     def test_validate(self):
         test_files_glob = self.tests_dir_path.glob("*.json")
         for test_file_path in test_files_glob:
-            with test_file_path.open() as f:
-                self.tests["files"] += 1
-                test_data = json.loads(f.read())
-                for test_case in test_data:
-                    self.tests["cases"] += 1
-                    test_case_description = test_case["description"]
-                    schema = test_case["schema"]
-                    try:
-                        validate = fastjsonschema.compile(schema)
-                    except Exception as e:
-                        if "fastjsonschema" not in self.exceptions[test_file_path.name]:
-                            self.exceptions[test_file_path.name]["fastjsonschema"] = []
-                        self.exceptions[test_file_path.name]["fastjsonschema"].append("{}: {}".format(test_case_description, e))
-                    for test in test_case["tests"]:
-                        self.tests["tests"] += 1
-                        description = test["description"]
-                        data = test["data"]
+            if test_file_path.stem not in self.blacklist:
+                with test_file_path.open() as f:
+                    self.tests["files"] += 1
+                    test_data = json.loads(f.read())
+                    for test_case in test_data:
+                        self.tests["cases"] += 1
+                        test_case_description = test_case["description"]
+                        schema = test_case["schema"]
                         try:
-                            if test["valid"]:
-                                validate(data)
-                            else:
-                                with self.assertRaises(fastjsonschema.exceptions.JsonSchemaException):
-                                    validate(data)
+                            validate = fastjsonschema.compile(schema)
                         except Exception as e:
-                            if test_case_description not in self.exceptions[test_file_path.name]:
-                                self.exceptions[test_file_path.name][test_case_description] = []
-                            self.exceptions[test_file_path.name][test_case_description].append("{}: {}".format(description, e))
+                            if "fastjsonschema" not in self.exceptions[test_file_path.name]:
+                                self.exceptions[test_file_path.name]["fastjsonschema"] = []
+                            self.exceptions[test_file_path.name]["fastjsonschema"].append("{}: {}".format(test_case_description, e))
+                        for test in test_case["tests"]:
+                            self.tests["tests"] += 1
+                            description = test["description"]
+                            data = test["data"]
+                            try:
+                                if test["valid"]:
+                                    validate(data)
+                                else:
+                                    with self.assertRaises(fastjsonschema.exceptions.JsonSchemaException):
+                                        validate(data)
+                            except Exception as e:
+                                if test_case_description not in self.exceptions[test_file_path.name]:
+                                    self.exceptions[test_file_path.name][test_case_description] = []
+                                self.exceptions[test_file_path.name][test_case_description].append("{}: {}".format(description, e))
 
 
 if __name__ == "__main__":
