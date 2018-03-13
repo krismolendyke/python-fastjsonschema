@@ -84,7 +84,12 @@ def _main():
     for file_name, test_cases in tests.items():
         print("\n{}".format(file_name))
         for test_case_description, test_case in test_cases.items():
-            print("  {}".format(test_case_description))
+            if any(t for t in test_case if t.result in (TestResult.FALSE_POSITIVE, TestResult.FALSE_NEGATIVE)):
+                print("  " + Fore.RED + "✘" + Fore.RESET, test_case_description)
+            elif any(t for t in test_case if t.result == TestResult.UNDEFINED):
+                print("  " + Fore.YELLOW + "⚠" + Fore.RESET, test_case_description)
+            else:
+                print("  " + Fore.GREEN + "✔" + Fore.RESET, test_case_description)
             for test in test_case:
                 test_results.update({test.result: True})
                 if test.result in (TestResult.TRUE_POSITIVE, TestResult.TRUE_NEGATIVE):
