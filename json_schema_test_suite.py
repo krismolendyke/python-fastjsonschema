@@ -41,16 +41,16 @@ def _get_parser():
 
 def _main():
     tests_dir_path = Path().resolve() / "JSON-Schema-Test-Suite/tests/draft4"
-    tests_ = defaultdict(dict)
     test_files_glob = tests_dir_path.glob("*.json")
+    tests = defaultdict(dict)
     for test_file_path in test_files_glob:
         with test_file_path.open() as f:
-            tests_[test_file_path.name] = defaultdict(dict)
+            tests[test_file_path.name] = defaultdict(dict)
             test_data = json.loads(f.read())
             for test_case in test_data:
                 test_case_description = test_case["description"]
                 schema = test_case["schema"]
-                tests_[test_file_path.name][test_case_description] = []
+                tests[test_file_path.name][test_case_description] = []
                 try:
                     validate = fastjsonschema.compile(schema)
                 except Exception as e:
@@ -77,10 +77,10 @@ def _main():
                     except Exception as e:
                         result = TestResult.UNDEFINED
                         exception = e
-                    tests_[test_file_path.name][test_case_description].append(Test(description, exception, result))
+                    tests[test_file_path.name][test_case_description].append(Test(description, exception, result))
 
     test_results = Counter()
-    for file_name, test_cases in tests_.items():
+    for file_name, test_cases in tests.items():
         print("\n{}".format(file_name))
         for test_case_description, test_case in test_cases.items():
             print("  {}".format(test_case_description))
