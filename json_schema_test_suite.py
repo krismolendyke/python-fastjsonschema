@@ -79,30 +79,25 @@ def _main():
                         exception = e
                     tests_[test_file_path.name][test_case_description].append(Test(description, exception, result))
 
-    file_exceptions = test_case_exceptions = total_exceptions = 0
     test_results = Counter()
     for file_name, test_cases in tests_.items():
-        file_exceptions += 1
-        print("\n{}. {}".format(file_exceptions, file_name))
-        j = 0
+        print("\n{}".format(file_name))
         for test_case_description, test_case in test_cases.items():
-            j += 1
-            test_case_exceptions += 1
-            print("    {}. {}".format(j, test_case_description))
-            for i, test in enumerate(test_case, 1):
+            print("  {}".format(test_case_description))
+            for test in test_case:
                 test_results.update({test.result: True})
                 if test.result == TestResult.TRUE_POSITIVE:
-                    print("        {}. ✔ {} {}".format(i, test.result.name, test.description))
+                    print("    ✔ {} {}".format(test.result.name, test.description))
                 elif test.result == TestResult.TRUE_NEGATIVE:
-                    print("        {}. ✔ {} {}".format(i, test.result.name, test.description))
+                    print("    ✔ {} {}".format(test.result.name, test.description))
                 elif test.result == TestResult.FALSE_POSITIVE:
-                    print("        {}. ✘ {} [{}] {}: {}".format(i, test.result.name, type(test.exception).__name__, test.description, test.exception))
+                    print("    ✘ {} [{}] {}: {}".format(test.result.name, type(test.exception).__name__, test.description, test.exception))
                 elif test.result == TestResult.FALSE_NEGATIVE:
-                    print("        {}. ✘ {} [{}] {}: {}".format(i, test.result.name, type(test.exception).__name__, test.description, test.exception))
+                    print("    ✘ {} [{}] {}: {}".format(test.result.name, type(test.exception).__name__, test.description, test.exception))
                 elif test.result == TestResult.UNDEFINED:
-                    print("        {}. ⚠ {} [{}] {}: {}".format(i, test.result.name, type(test.exception).__name__, test.description, test.exception))
+                    print("    ⚠ {} [{}] {}: {}".format(test.result.name, type(test.exception).__name__, test.description, test.exception))
                 else:
-                    print("        {}. 💀 DEATH")  # WTF
+                    print("    {}. 💀 DEATH")  # WTF
 
     total = sum(test_results.values())
     total_failures = total_passes = 0
