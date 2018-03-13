@@ -54,23 +54,22 @@ def _main():
                     except Exception as e:
                         if "fastjsonschema" not in exceptions[test_file_path.name]:
                             exceptions[test_file_path.name]["fastjsonschema"] = []
-                        exceptions[test_file_path.name]["fastjsonschema"].append("{}: {}".format(test_case_description, e))
+                        exceptions[test_file_path.name]["fastjsonschema"].append("[{}] {}: {}".format(type(e).__name__, test_case_description, e))
                     for test in test_case["tests"]:
                         tests["tests"] += 1
                         description = test["description"]
                         data = test["data"]
                         try:
+                            validate(data)
+                        except fastjsonschema.exceptions.JsonSchemaException as e:  # Validation exception
                             if test["valid"]:
-                                validate(data)
-                            else:
-                                try:
-                                    validate(data)
-                                except fastjsonschema.exceptions.JsonSchemaException:
-                                    pass  # Expected to be invalid
-                        except Exception as e:
+                                if test_case_description not in exceptions[test_file_path.name]:
+                                    exceptions[test_file_path.name][test_case_description] = []
+                                exceptions[test_file_path.name][test_case_description].append("[{}] {}: {}".format(type(e).__name__, description, e))
+                        except Exception as e:  # Any other exception (likely Python)
                             if test_case_description not in exceptions[test_file_path.name]:
                                 exceptions[test_file_path.name][test_case_description] = []
-                            exceptions[test_file_path.name][test_case_description].append("{}: {}".format(description, e))
+                            exceptions[test_file_path.name][test_case_description].append("[{}] {}: {}".format(type(e).__name__, description, e))
 
     print("\nSkipped:\n")
     for i, name in enumerate(blacklist, 1):
