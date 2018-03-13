@@ -36,15 +36,20 @@ Test = namedtuple("Test", "description exception result")
 
 def _get_parser():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    p.add_argument("--test", help="Run a specific test only", type=Path)
+    p.add_argument("--tests", help="Run tests in this directory or file", type=Path,
+                   default=Path().resolve() / "JSON-Schema-Test-Suite/tests/draft4")
     return p
 
 
 def _main():
-    tests_dir_path = Path().resolve() / "JSON-Schema-Test-Suite/tests/draft4"
-    test_files_glob = tests_dir_path.glob("*.json")
+    if args.tests.is_dir():
+        test_file_paths = list(args.tests.glob("*.json"))
+    elif args.tests.is_file():
+        test_file_paths = [args.tests.resolve()]
+    else:
+        return args.tests + " must be a directory or a file"
     tests = defaultdict(dict)
-    for test_file_path in test_files_glob:
+    for test_file_path in test_file_paths:
         with test_file_path.open() as f:
             tests[test_file_path.name] = defaultdict(dict)
             test_data = json.loads(f.read())
