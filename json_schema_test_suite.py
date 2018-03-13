@@ -21,6 +21,7 @@ try:
 except ImportError:
     from pathlib2 import Path
 
+from colorama import Fore
 import fastjsonschema
 
 class TestResult(Enum):
@@ -86,18 +87,20 @@ def _main():
             print("  {}".format(test_case_description))
             for test in test_case:
                 test_results.update({test.result: True})
-                if test.result == TestResult.TRUE_POSITIVE:
-                    print("    ✔ {} {}".format(test.result.name, test.description))
-                elif test.result == TestResult.TRUE_NEGATIVE:
-                    print("    ✔ {} {}".format(test.result.name, test.description))
-                elif test.result == TestResult.FALSE_POSITIVE:
-                    print("    ✘ {} [{}] {}: {}".format(test.result.name, type(test.exception).__name__, test.description, test.exception))
-                elif test.result == TestResult.FALSE_NEGATIVE:
-                    print("    ✘ {} [{}] {}: {}".format(test.result.name, type(test.exception).__name__, test.description, test.exception))
+                if test.result in (TestResult.TRUE_POSITIVE, TestResult.TRUE_NEGATIVE):
+                    print("    " + Fore.GREEN + "✔" + Fore.RESET,
+                          Fore.CYAN + test.result.name + Fore.RESET,
+                          test.description)
+                elif test.result in (TestResult.FALSE_POSITIVE, TestResult.FALSE_NEGATIVE):
+                    print("    " + Fore.RED + "✘" + Fore.RESET,
+                          Fore.CYAN + test.result.name + Fore.RESET,
+                          Fore.RED + type(test.exception).__name__ + Fore.RESET,
+                          "{}: {}".format(test.description, test.exception))
                 elif test.result == TestResult.UNDEFINED:
-                    print("    ⚠ {} [{}] {}: {}".format(test.result.name, type(test.exception).__name__, test.description, test.exception))
-                else:
-                    print("    {}. 💀 DEATH")  # WTF
+                    print("    " + Fore.YELLOW + "⚠" + Fore.RESET,
+                          Fore.CYAN + test.result.name + Fore.RESET,
+                          Fore.YELLOW + type(test.exception).__name__ + Fore.RESET,
+                          "{}: {}".format(test.description, test.exception))
 
     total = sum(test_results.values())
     total_failures = total_passes = 0
