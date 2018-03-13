@@ -38,6 +38,7 @@ def _get_parser():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     p.add_argument("--tests", help="Run tests in this directory or file", type=Path,
                    default=Path().resolve() / "JSON-Schema-Test-Suite/tests/draft4")
+    p.add_argument("--verbose", help="Print passing tests", action="store_true")
     return p
 
 
@@ -87,21 +88,26 @@ def _main():
 
     test_results = Counter()
     for file_name, test_cases in tests.items():
-        print("\n{}".format(file_name))
+        for test_case in test_cases.values():
+            if any(t for t in test_case if t.result in (TestResult.FALSE_POSITIVE, TestResult.FALSE_NEGATIVE)):
+                print(Fore.RED + "✘" + Fore.RESET, file_name)
+                break
+            elif any(t for t in test_case if t.result == TestResult.UNDEFINED):
+                print(Fore.YELLOW + "⚠" + Fore.RESET, file_name)
+                break
+            else:
+                print(Fore.GREEN + "✔" + Fore.RESET, file_name)
+                break
         for test_case_description, test_case in test_cases.items():
             if any(t for t in test_case if t.result in (TestResult.FALSE_POSITIVE, TestResult.FALSE_NEGATIVE)):
                 print("  " + Fore.RED + "✘" + Fore.RESET, test_case_description)
             elif any(t for t in test_case if t.result == TestResult.UNDEFINED):
                 print("  " + Fore.YELLOW + "⚠" + Fore.RESET, test_case_description)
-            else:
+            elif args.verbose:
                 print("  " + Fore.GREEN + "✔" + Fore.RESET, test_case_description)
             for test in test_case:
                 test_results.update({test.result: True})
-                if test.result in (TestResult.TRUE_POSITIVE, TestResult.TRUE_NEGATIVE):
-                    print("    " + Fore.GREEN + "✔" + Fore.RESET,
-                          Fore.CYAN + test.result.name + Fore.RESET,
-                          test.description)
-                elif test.result in (TestResult.FALSE_POSITIVE, TestResult.FALSE_NEGATIVE):
+                if test.result in (TestResult.FALSE_POSITIVE, TestResult.FALSE_NEGATIVE):
                     print("    " + Fore.RED + "✘" + Fore.RESET,
                           Fore.CYAN + test.result.name + Fore.RESET,
                           Fore.RED + type(test.exception).__name__ + Fore.RESET,
@@ -111,6 +117,10 @@ def _main():
                           Fore.CYAN + test.result.name + Fore.RESET,
                           Fore.YELLOW + type(test.exception).__name__ + Fore.RESET,
                           "{}: {}".format(test.description, test.exception))
+                elif args.verbose:
+                    print("    " + Fore.GREEN + "✔" + Fore.RESET,
+                          Fore.CYAN + test.result.name + Fore.RESET,
+                          test.description)
 
     total = sum(test_results.values())
     total_failures = total_passes = 0
