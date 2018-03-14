@@ -106,7 +106,7 @@ def _main():
             elif args.verbose:
                 print("  " + Fore.GREEN + "✔" + Fore.RESET, test_case_description)
             for test in test_case:
-                test_results.update({test.result: True})
+                test_results.update({test.result: 1})
                 if test.result in (TestResult.FALSE_POSITIVE, TestResult.FALSE_NEGATIVE):
                     print("    " + Fore.RED + "✘" + Fore.RESET,
                           Fore.CYAN + test.result.name + Fore.RESET,
