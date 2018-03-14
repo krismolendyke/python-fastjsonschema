@@ -50,6 +50,7 @@ def _main():
     else:
         return args.tests + " must be a directory or a file"
     tests = defaultdict(dict)
+    schema_exceptions = {}
     for test_file_path in test_file_paths:
         with test_file_path.open() as f:
             tests[test_file_path.name] = defaultdict(dict)
@@ -61,7 +62,7 @@ def _main():
                 try:
                     validate = fastjsonschema.compile(schema)
                 except Exception as e:
-                    raise e
+                    schema_exceptions[test_file_path.name] = e
                 for test in test_case["tests"]:
                     description = test["description"]
                     data = test["data"]
@@ -122,6 +123,12 @@ def _main():
                           Fore.CYAN + test.result.name + Fore.RESET,
                           test.description)
 
+    if schema_exceptions:
+        print("\nSchema exceptions:\n")
+        for file_name, exception in schema_exceptions.items():
+            print("  " + Fore.RED + "✘" + Fore.RESET,
+                  "{}: {}: '{}'".format(file_name, exception, exception.text.strip()))
+
     total = sum(test_results.values())
     total_failures = total_passes = 0
     print("\nSummary of {} tests:\n".format(total))
@@ -129,19 +136,19 @@ def _main():
     for result in (TestResult.FALSE_POSITIVE, TestResult.FALSE_NEGATIVE, TestResult.UNDEFINED):
         total_failures += test_results[result]
         if result == TestResult.UNDEFINED:
-            print(Fore.YELLOW + "⚠", end=" ")
+            print("  " + Fore.YELLOW + "⚠", end=" ")
         else:
-            print(Fore.RED + "✘", end=" ")
+            print("  " + Fore.RED + "✘", end=" ")
         print(Fore.CYAN + "{:<14}".format(result.name) + Fore.RESET,
               "{} {:>5.1%}".format(test_results[result], test_results[result] / total))
-    print("               {} {:>5.1%}".format(total_failures, total_failures / total))
+    print("                   {} {:>5.1%}".format(total_failures, total_failures / total))
     print("\nPasses:\n")
     for result in (TestResult.TRUE_POSITIVE, TestResult.TRUE_NEGATIVE):
         total_passes += test_results[result]
-        print(Fore.GREEN + "✔",
+        print("  " + Fore.GREEN + "✔",
               Fore.CYAN + "{:<14}".format(result.name) + Fore.RESET,
               "{} {:>5.1%}".format(test_results[result], test_results[result] / total))
-    print("              {} {:5.1%}".format(total_passes, total_passes / total))
+    print("                   {} {:5.1%}".format(total_passes, total_passes / total))
 
 
 if __name__ == "__main__":
