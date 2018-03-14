@@ -61,7 +61,7 @@ def _main():
                 try:
                     validate = fastjsonschema.compile(schema)
                 except Exception as e:
-                    pass  # TODO record undefined schema exceptions
+                    raise e
                 for test in test_case["tests"]:
                     description = test["description"]
                     data = test["data"]
