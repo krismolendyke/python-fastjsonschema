@@ -128,12 +128,19 @@ def _main():
     print("Failures:\n")
     for result in (TestResult.FALSE_POSITIVE, TestResult.FALSE_NEGATIVE, TestResult.UNDEFINED):
         total_failures += test_results[result]
-        print("{:<14} {} {:>5.1%}".format(result.name, test_results[result], test_results[result] / total))
+        if result == TestResult.UNDEFINED:
+            print(Fore.YELLOW + "⚠", end=" ")
+        else:
+            print(Fore.RED + "✘", end=" ")
+        print(Fore.CYAN + "{:<14}".format(result.name) + Fore.RESET,
+              "{} {:>5.1%}".format(test_results[result], test_results[result] / total))
     print("               {} {:>5.1%}".format(total_failures, total_failures / total))
     print("\nPasses:\n")
     for result in (TestResult.TRUE_POSITIVE, TestResult.TRUE_NEGATIVE):
         total_passes += test_results[result]
-        print("{:<13} {} {:5.1%}".format(result.name, test_results[result], test_results[result] / total))
+        print(Fore.GREEN + "✔",
+              Fore.CYAN + "{:<14}".format(result.name) + Fore.RESET,
+              "{} {:>5.1%}".format(test_results[result], test_results[result] / total))
     print("              {} {:5.1%}".format(total_passes, total_passes / total))
 
 
